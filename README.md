@@ -4,6 +4,11 @@
 </div>
 <hr />
 
+
+## Documentation Project
+An attempt to understand the Raiblocks code by documentating it ourselves.
+
+
 [![Build Status](https://travis-ci.org/nanocurrency/raiblocks.svg?branch=master)](https://travis-ci.org/nanocurrency/raiblocks)
 [![Build status](https://ci.appveyor.com/api/projects/status/uwdcxi87h2y6jx94/branch/master?svg=true)](https://ci.appveyor.com/project/argakiig/raiblocks/branch/master)
 ### What is Nano?
