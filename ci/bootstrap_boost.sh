@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# W.S = installs bootstrap locally onto computer
 
 set -o errexit
 set -o xtrace

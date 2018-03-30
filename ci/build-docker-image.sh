@@ -1,4 +1,5 @@
 #!/bin/bash
+#W.S. = some docker thing to download image or something I don't know
 set -eu
 
 if [ "$#" -lt 2 ]; then
