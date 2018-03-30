@@ -12,12 +12,17 @@
 #include <ed25519-donna/ed25519.h>
 
 // Genesis keys for network variants
+// W.S. = each has public key (test has private exposed) and an open block that each account needs to have on creation
+//ws he placed all of it into namespace so it can be called at any point. Don't know why it isn't named though
 namespace
 {
 char const * test_private_key_data = "34F0A37AAD20F4A260F0A5B3CB3D7FB50673212263E58A380BC10474BB039CE4";
 char const * test_public_key_data = "B0311EA55708D6A53C75CDBF88300259C6D018522FE3D4D0A242E431F9E8B6D0"; // xrb_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo
 char const * beta_public_key_data = "0311B25E0D1E1D7724BBA5BD523954F1DBCFC01CB8671D55ED2D32C7549FB252"; // xrb_11rjpbh1t9ixgwkdqbfxcawobwgusz13sg595ocytdbkrxcbzekkcqkc3dn1
 char const * live_public_key_data = "E89208DD038FBB269987689621D52292AE9C35941A7484756ECCED92A65093BA"; // xrb_3t6k35gi95xu6tergt6p69ck76ogmitsa8mnijtpxm9fkcm736xtoncuohr3
+//ws source points to its owns key since the source is always genesis 
+//ws don't understand work and what exactly that does
+//ws what's interesting is that this is a char (8 bits) but text is obviously much longer. Have never seen the R"" thing before
 char const * test_genesis_data = R"%%%({
 	"type": "open",
 	"source": "B0311EA55708D6A53C75CDBF88300259C6D018522FE3D4D0A242E431F9E8B6D0",
@@ -44,11 +49,14 @@ char const * live_genesis_data = R"%%%({
 	"work": "62f05417dd3fb691",
 	"signature": "9F0C933C8ADE004D808EA1985FA746A7E95BA2A38F867640F53EC8F180BDFE9E2C1268DEAD7C2664F356E37ABA362BC58E46DBA03E523A7B5A19E4B6EB12BB02"
 })%%%";
-
+//ws pretty obvious class. Creates constants for beta initialization 
 class ledger_constants
 {
+//ws public means exposed to where anybody can access and change. Most likely won't see any private sections in any class since decentralized
 public:
+	//ws constructor with all the init variables
 	ledger_constants () :
+	//ws have no idea on zero key. I'm guessing just a null placer
 	zero_key ("0"),
 	test_genesis_key (test_private_key_data),
 	rai_test_account (test_public_key_data),
@@ -60,6 +68,7 @@ public:
 	genesis_account (rai::rai_network == rai::rai_networks::rai_test_network ? rai_test_account : rai::rai_network == rai::rai_networks::rai_beta_network ? rai_beta_account : rai_live_account),
 	genesis_block (rai::rai_network == rai::rai_networks::rai_test_network ? rai_test_genesis : rai::rai_network == rai::rai_networks::rai_beta_network ? rai_beta_genesis : rai_live_genesis),
 	genesis_amount (std::numeric_limits<rai::uint128_t>::max ()),
+	//ws kinda confused on this and how it works
 	burn_account (0)
 	{
 		CryptoPP::AutoSeededRandomPool random_pool;
@@ -84,13 +93,15 @@ public:
 };
 ledger_constants globals;
 }
-
+// size_t is located in CL/cl.hpp
+//ws I guess this is making the size of blocks fixed
 size_t constexpr rai::send_block::size;
 size_t constexpr rai::receive_block::size;
 size_t constexpr rai::open_block::size;
 size_t constexpr rai::change_block::size;
 size_t constexpr rai::state_block::size;
 
+//ws really don't know what any of this is doing
 rai::keypair const & rai::zero_key (globals.zero_key);
 rai::keypair const & rai::test_genesis_key (globals.test_genesis_key);
 rai::account const & rai::rai_test_account (globals.rai_test_account);
@@ -107,6 +118,7 @@ rai::block_hash const & rai::not_a_block (globals.not_a_block);
 rai::block_hash const & rai::not_an_account (globals.not_an_account);
 rai::account const & rai::burn_account (globals.burn_account);
 
+//ws voting mechanism for a new block being pushed. Don't know where some of the vars are coming from 
 rai::votes::votes (std::shared_ptr<rai::block> block_a) :
 id (block_a->root ())
 {
@@ -141,6 +153,7 @@ rai::tally_result rai::votes::vote (std::shared_ptr<rai::vote> vote_a)
 }
 
 // Create a new random keypair
+// ws generates both private and public key
 rai::keypair::keypair ()
 {
 	random_pool.GenerateBlock (prv.data.bytes.data (), prv.data.bytes.size ());
@@ -148,6 +161,7 @@ rai::keypair::keypair ()
 }
 
 // Create a keypair given a hex string of the private key
+// ws generates new public key given private key
 rai::keypair::keypair (std::string const & prv_a)
 {
 	auto error (prv.data.decode_hex (prv_a));
@@ -156,18 +170,23 @@ rai::keypair::keypair (std::string const & prv_a)
 }
 
 // Serialize a block prefixed with an 8-bit typecode
+// ws im guessing converts block into binary format? Wonder what is purpose of this
 void rai::serialize_block (rai::stream & stream_a, rai::block const & block_a)
 {
 	write (stream_a, block_a.type ());
 	block_a.serialize (stream_a);
 }
 
+// ws converting block back into understandable format
 std::unique_ptr<rai::block> rai::deserialize_block (MDB_val const & val_a)
 {
 	rai::bufferstream stream (reinterpret_cast<uint8_t const *> (val_a.mv_data), val_a.mv_size);
 	return deserialize_block (stream);
 }
 
+// ws init of blank account
+// ws makeup of all the types of info that can be pulled from an account. we won't need balance, but we will need individual item separators
+// ws only one I don't understand is modified
 rai::account_info::account_info () :
 head (0),
 rep_block (0),
@@ -178,6 +197,7 @@ block_count (0)
 {
 }
 
+// ws really confused on this one and what MDB_val and val_a are
 rai::account_info::account_info (MDB_val const & val_a)
 {
 	assert (val_a.mv_size == sizeof (*this));
@@ -185,6 +205,7 @@ rai::account_info::account_info (MDB_val const & val_a)
 	std::copy (reinterpret_cast<uint8_t const *> (val_a.mv_data), reinterpret_cast<uint8_t const *> (val_a.mv_data) + sizeof (*this), reinterpret_cast<uint8_t *> (this));
 }
 
+// ws init when all the account information is available to call
 rai::account_info::account_info (rai::block_hash const & head_a, rai::block_hash const & rep_block_a, rai::block_hash const & open_block_a, rai::amount const & balance_a, uint64_t modified_a, uint64_t block_count_a) :
 head (head_a),
 rep_block (rep_block_a),
@@ -195,6 +216,7 @@ block_count (block_count_a)
 {
 }
 
+// ws serealization process (again dont understand why this is necessary)
 void rai::account_info::serialize (rai::stream & stream_a) const
 {
 	write (stream_a, head.bytes);
@@ -231,21 +253,25 @@ bool rai::account_info::deserialize (rai::stream & stream_a)
 	return error;
 }
 
+// ws it seems like you run this to check if an account is another account?
 bool rai::account_info::operator== (rai::account_info const & other_a) const
 {
 	return head == other_a.head && rep_block == other_a.rep_block && open_block == other_a.open_block && balance == other_a.balance && modified == other_a.modified && block_count == other_a.block_count;
 }
 
+// ws this one checks if you arent another account
 bool rai::account_info::operator!= (rai::account_info const & other_a) const
 {
 	return !(*this == other_a);
 }
 
+// ws don't get this one either. relates to mdb_val up there, and returns it to util.cpp
 rai::mdb_val rai::account_info::val () const
 {
 	return rai::mdb_val (sizeof (*this), const_cast<rai::account_info *> (this));
 }
 
+// ws init of block count without any account
 rai::block_counts::block_counts () :
 send (0),
 receive (0),
@@ -254,16 +280,19 @@ change (0)
 {
 }
 
+// ws I wonder how this gets those values, there's nothing in parenthesis
 size_t rai::block_counts::sum ()
 {
 	return send + receive + open + change + state;
 }
 
+// ws guessing if there are any pending transactions up (actually will be much more useful in our case since pending receives occur more frequently)
 rai::pending_info::pending_info () :
 source (0),
 amount (0)
 {
 }
+
 
 rai::pending_info::pending_info (MDB_val const & val_a)
 {
