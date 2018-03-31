@@ -287,13 +287,14 @@ size_t rai::block_counts::sum ()
 }
 
 // ws guessing if there are any pending transactions up (actually will be much more useful in our case since pending receives occur more frequently)
+// ws reminder that pending transactions only occur for receive blocks (pending until end receiver completes hash to place into chain)
 rai::pending_info::pending_info () :
 source (0),
 amount (0)
 {
 }
 
-
+// ws same thing as that other mdb thing, don't understand exactly what that val represents
 rai::pending_info::pending_info (MDB_val const & val_a)
 {
 	assert (val_a.mv_size == sizeof (*this));
@@ -301,12 +302,14 @@ rai::pending_info::pending_info (MDB_val const & val_a)
 	std::copy (reinterpret_cast<uint8_t const *> (val_a.mv_data), reinterpret_cast<uint8_t const *> (val_a.mv_data) + sizeof (*this), reinterpret_cast<uint8_t *> (this));
 }
 
+// ws pending check when all the account information is available to call
 rai::pending_info::pending_info (rai::account const & source_a, rai::amount const & amount_a) :
 source (source_a),
 amount (amount_a)
 {
 }
 
+// ws next two same as other serialize/deserialize
 void rai::pending_info::serialize (rai::stream & stream_a) const
 {
 	rai::write (stream_a, source.bytes);
@@ -323,6 +326,7 @@ bool rai::pending_info::deserialize (rai::stream & stream_a)
 	return result;
 }
 
+// ws check that person looking at block is who received it
 bool rai::pending_info::operator== (rai::pending_info const & other_a) const
 {
 	return source == other_a.source && amount == other_a.amount;
@@ -333,6 +337,7 @@ rai::mdb_val rai::pending_info::val () const
 	return rai::mdb_val (sizeof (*this), const_cast<rai::pending_info *> (this));
 }
 
+// ws getting the account which has pending block, and the corresponding hash of block?
 rai::pending_key::pending_key (rai::account const & account_a, rai::block_hash const & hash_a) :
 account (account_a),
 hash (hash_a)
@@ -727,16 +732,24 @@ void rai::vote::serialize (rai::stream & stream_a)
 	rai::serialize_block (stream_a, *block);
 }
 
+// ws important code. Creation of genesis account and corresponding blocks
 rai::genesis::genesis ()
 {
+	// ws boost is package for network cuncurrency/multithreading. tree is most likely representation of "account-chain"
 	boost::property_tree::ptree tree;
+	// ws istream type is either genesis block or string. need to chase down what exactly comprises gen block
 	std::stringstream istream (rai::genesis_block);
+	// ws place block(which is a json) onto the tree
 	boost::property_tree::read_json (istream, tree);
+	// ws converting from raw to readable json type
 	auto block (rai::deserialize_block_json (tree));
+	// ws not entirely sure what's going on here. gets a block that doesn't point to anything, then releases
 	assert (dynamic_cast<rai::open_block *> (block.get ()) != nullptr);
 	open.reset (static_cast<rai::open_block *> (block.release ()));
 }
 
+// ws lots of stuff here that needs broken down. Placing all necessary blocks in gen acc
+// ws We can also see at store_a.account_put, we are placing all possible combination of vals into account
 void rai::genesis::initialize (MDB_txn * transaction_a, rai::block_store & store_a) const
 {
 	auto hash_l (hash ());
@@ -748,6 +761,7 @@ void rai::genesis::initialize (MDB_txn * transaction_a, rai::block_store & store
 	store_a.frontier_put (transaction_a, hash_l, genesis_account);
 }
 
+// ws hashes the open block, which is necessary for account creation
 rai::block_hash rai::genesis::hash () const
 {
 	return open->hash ();
