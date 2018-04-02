@@ -2,6 +2,7 @@
 
 #include <boost/endian/conversion.hpp>
 
+// ws hex - string converter
 std::string rai::to_string_hex (uint64_t value_a)
 {
 	std::stringstream stream;
@@ -10,6 +11,7 @@ std::string rai::to_string_hex (uint64_t value_a)
 	return stream.str ();
 }
 
+// string to hex. Just seems to be a check though to make sure the string can be a hex
 bool rai::from_string_hex (std::string const & value_a, uint64_t & target_a)
 {
 	auto error (value_a.empty ());
@@ -39,6 +41,7 @@ bool rai::from_string_hex (std::string const & value_a, uint64_t & target_a)
 	return error;
 }
 
+// ws block to json. But this doesn't have any input so not sure what exactly it is converting
 std::string rai::block::to_json ()
 {
 	std::string result;
@@ -46,6 +49,7 @@ std::string rai::block::to_json ()
 	return result;
 }
 
+// ws returns a block hash, not sure what inputs are of it though 
 rai::block_hash rai::block::hash () const
 {
 	rai::uint256_union result;
@@ -58,21 +62,25 @@ rai::block_hash rai::block::hash () const
 	return result;
 }
 
+// ws ?? what exactly is this doing
 void rai::send_block::visit (rai::block_visitor & visitor_a) const
 {
 	visitor_a.send_block (*this);
 }
+
 
 void rai::send_block::hash (blake2b_state & hash_a) const
 {
 	hashables.hash (hash_a);
 }
 
+// ws returns work required to transact. Still not sure what work represents. Perhaps the complexity level of submitting block through black2
 uint64_t rai::send_block::block_work () const
 {
 	return work;
 }
 
+// ws sets the work of a block as the work inputted
 void rai::send_block::block_work_set (uint64_t work_a)
 {
 	work = work_a;
