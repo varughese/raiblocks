@@ -86,6 +86,7 @@ void rai::send_block::block_work_set (uint64_t work_a)
 	work = work_a;
 }
 
+// ws creates the info necessary to connect send/receive blocks
 rai::send_hashables::send_hashables (rai::block_hash const & previous_a, rai::account const & destination_a, rai::amount const & balance_a) :
 previous (previous_a),
 destination (destination_a),
@@ -93,6 +94,7 @@ balance (balance_a)
 {
 }
 
+// ws checks there's no error within the send/receive info
 rai::send_hashables::send_hashables (bool & error_a, rai::stream & stream_a)
 {
 	error_a = rai::read (stream_a, previous.bytes);
@@ -106,6 +108,7 @@ rai::send_hashables::send_hashables (bool & error_a, rai::stream & stream_a)
 	}
 }
 
+// ws checks there's no error within the send/receive info, this time each one is decoded
 rai::send_hashables::send_hashables (bool & error_a, boost::property_tree::ptree const & tree_a)
 {
 	try
@@ -129,6 +132,7 @@ rai::send_hashables::send_hashables (bool & error_a, boost::property_tree::ptree
 	}
 }
 
+// ws checks that the hashes (as bytes) fit within the designated sizes using asserts
 void rai::send_hashables::hash (blake2b_state & hash_a) const
 {
 	auto status (blake2b_update (&hash_a, previous.bytes.data (), sizeof (previous.bytes)));
@@ -139,6 +143,7 @@ void rai::send_hashables::hash (blake2b_state & hash_a) const
 	assert (status == 0);
 }
 
+// ws creates raw vals
 void rai::send_block::serialize (rai::stream & stream_a) const
 {
 	write (stream_a, hashables.previous.bytes);
@@ -148,6 +153,7 @@ void rai::send_block::serialize (rai::stream & stream_a) const
 	write (stream_a, work);
 }
 
+// ws serialize in this function seems to mean taking the tree (account-chain) and converting it to string (json)
 void rai::send_block::serialize_json (std::string & string_a) const
 {
 	boost::property_tree::ptree tree;
@@ -168,6 +174,7 @@ void rai::send_block::serialize_json (std::string & string_a) const
 	string_a = ostream.str ();
 }
 
+// ws prelim check before the deserialze_json function
 bool rai::send_block::deserialize (rai::stream & stream_a)
 {
 	auto error (false);
