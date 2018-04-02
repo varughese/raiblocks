@@ -1,3 +1,4 @@
+// ws I'm pretty sure we can drop all versioning references. There'll only be one version that works. 
 #include <rai/versioning.hpp>
 
 rai::account_info_v1::account_info_v1 () :

@@ -7,27 +7,29 @@ namespace
 /**
  * Roll back the visited block
  */
+// ws interesting that class and namespace is created in .cpp file. 
 class rollback_visitor : public rai::block_visitor
 {
 public:
+	// ws call of block that will be rolled back. pulls transaction (block) and particular account
 	rollback_visitor (MDB_txn * transaction_a, rai::ledger & ledger_a) :
 	transaction (transaction_a),
 	ledger (ledger_a)
 	{
 	}
-	virtual ~rollback_visitor () = default;
+	virtual ~rollback_visitor () = default; // ws pointer does not matter
 	void send_block (rai::send_block const & block_a) override
 	{
 		auto hash (block_a.hash ());
-		rai::pending_info pending;
+		rai::pending_info pending; // ws checks the state
 		rai::pending_key key (block_a.hashables.destination, hash);
-		while (ledger.store.pending_get (transaction, key, pending))
-		{
+		while (ledger.store.pending_get (transaction, key, pending)) // ws while the block is pending (not sure if this means receive or send block)
+		{ // ws rolls back to latest unforked ledger that the network stored. 
 			ledger.rollback (transaction, ledger.latest (transaction, block_a.hashables.destination));
 		}
 		rai::account_info info;
 		auto error (ledger.store.account_get (transaction, pending.source, info));
-		assert (!error);
+		assert (!error); 
 		ledger.store.pending_del (transaction, key);
 		ledger.store.representation_add (transaction, ledger.representative (transaction, hash), pending.amount.number ());
 		ledger.change_latest (transaction, pending.source, block_a.hashables.previous, info.rep_block, ledger.balance (transaction, block_a.hashables.previous), info.block_count - 1);
