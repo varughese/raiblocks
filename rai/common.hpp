@@ -36,12 +36,12 @@ class balance_visitor : public rai::block_visitor
 public:
 	balance_visitor (MDB_txn *, rai::block_store &);
 	virtual ~balance_visitor () = default;
-	void compute (rai::block_hash const &);
+	void compute (rai::block_hash const &); // ws curious why he labels this as compute
 	void send_block (rai::send_block const &) override;
 	void receive_block (rai::receive_block const &) override;
 	void open_block (rai::open_block const &) override;
-	void change_block (rai::change_block const &) override;
-	void state_block (rai::state_block const &) override;
+	void change_block (rai::change_block const &) override; // ws change block reference to changing representative of account
+	void state_block (rai::state_block const &) override; // ws not sure what state block is. I think this might be the new universal block ()
 	MDB_txn * transaction;
 	rai::block_store & store;
 	rai::block_hash current;
@@ -51,6 +51,9 @@ public:
 /**
  * Determine the amount delta resultant from this block
  */
+// ws only difference between amount_visitor and balance_visitor is:
+// from_send (representing block hash)
+// amount_visitor does not place the block_hash as current
 class amount_visitor : public rai::block_visitor
 {
 public:
@@ -71,6 +74,7 @@ public:
 /**
  * Determine the representative for this block
  */
+// ws check class for voting on blocks as representative?
 class representative_visitor : public rai::block_visitor
 {
 public:
@@ -92,6 +96,7 @@ public:
  * A key pair. The private key is generated from the random pool, or passed in
  * as a hex string. The public key is derived using ed25519.
  */
+// ws easy class. seems easy enough to connect to  generate private key / public key
 class keypair
 {
 public:
@@ -100,7 +105,7 @@ public:
 	rai::public_key pub;
 	rai::raw_key prv;
 };
-
+// ws why is this by itself? Just creates a unique pointer for a block
 std::unique_ptr<rai::block> deserialize_block (MDB_val const &);
 
 /**
@@ -273,10 +278,12 @@ extern rai::uint128_t const & genesis_amount;
 extern rai::block_hash const & not_a_block;
 // An account number that compares inequal to any real account number
 extern rai::block_hash const & not_an_account;
+
+// ws genesis class
 class genesis
 {
 public:
-	explicit genesis ();
+	explicit genesis (); // The explicit specifier specifies that a constructor or conversion function (since C++11) doesn't allow implicit conversions or copy-initialization
 	void initialize (MDB_txn *, rai::block_store &) const;
 	rai::block_hash hash () const;
 	std::unique_ptr<rai::open_block> open;
