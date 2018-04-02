@@ -326,12 +326,12 @@ bool rai::pending_info::deserialize (rai::stream & stream_a)
 	return result;
 }
 
-// ws check that person looking at block is who received it
+// ws check that person looking at block is who received it?
 bool rai::pending_info::operator== (rai::pending_info const & other_a) const
 {
 	return source == other_a.source && amount == other_a.amount;
 }
-
+// ws same mdb thing. Maybe mdb represents amount of transfer?
 rai::mdb_val rai::pending_info::val () const
 {
 	return rai::mdb_val (sizeof (*this), const_cast<rai::pending_info *> (this));
@@ -344,6 +344,7 @@ hash (hash_a)
 {
 }
 
+// ws really confusing function. seems to be pulling the block, making sure the account + hash is the same as the val of block, then i don't know
 rai::pending_key::pending_key (MDB_val const & val_a)
 {
 	assert (val_a.mv_size == sizeof (*this));
@@ -351,6 +352,7 @@ rai::pending_key::pending_key (MDB_val const & val_a)
 	std::copy (reinterpret_cast<uint8_t const *> (val_a.mv_data), reinterpret_cast<uint8_t const *> (val_a.mv_data) + sizeof (*this), reinterpret_cast<uint8_t *> (this));
 }
 
+// ws raw converter
 void rai::pending_key::serialize (rai::stream & stream_a) const
 {
 	rai::write (stream_a, account.bytes);
@@ -367,22 +369,26 @@ bool rai::pending_key::deserialize (rai::stream & stream_a)
 	return error;
 }
 
+// ws check if account is the account and that the hash matches
 bool rai::pending_key::operator== (rai::pending_key const & other_a) const
 {
 	return account == other_a.account && hash == other_a.hash;
 }
 
+// ws returns the mdb_val. Still confused what exactly it represents
 rai::mdb_val rai::pending_key::val () const
 {
 	return rai::mdb_val (sizeof (*this), const_cast<rai::pending_key *> (this));
 }
 
+// ws block info with no input vars
 rai::block_info::block_info () :
 account (0),
 balance (0)
 {
 }
 
+// ws same as pending_block::pending_block
 rai::block_info::block_info (MDB_val const & val_a)
 {
 	assert (val_a.mv_size == sizeof (*this));
@@ -390,12 +396,14 @@ rai::block_info::block_info (MDB_val const & val_a)
 	std::copy (reinterpret_cast<uint8_t const *> (val_a.mv_data), reinterpret_cast<uint8_t const *> (val_a.mv_data) + sizeof (*this), reinterpret_cast<uint8_t *> (this));
 }
 
+// ws pulls the block info given the account and balance (almost like a self-check)
 rai::block_info::block_info (rai::account const & account_a, rai::amount const & balance_a) :
 account (account_a),
 balance (balance_a)
 {
 }
 
+// ws raw encoder
 void rai::block_info::serialize (rai::stream & stream_a) const
 {
 	rai::write (stream_a, account.bytes);
@@ -422,16 +430,19 @@ rai::mdb_val rai::block_info::val () const
 	return rai::mdb_val (sizeof (*this), const_cast<rai::block_info *> (this));
 }
 
+// ws checks if the sequence is correct (where is it getting sequence?), block location is correct, account is correct voter, and sig is correct
 bool rai::vote::operator== (rai::vote const & other_a) const
 {
 	return sequence == other_a.sequence && *block == *other_a.block && account == other_a.account && signature == other_a.signature;
 }
 
+// ws checks vote location is correct
 bool rai::vote::operator!= (rai::vote const & other_a) const
 {
 	return !(*this == other_a);
 }
 
+// ws returns the vote from boost property to string(of a json)
 std::string rai::vote::to_json () const
 {
 	std::stringstream stream;

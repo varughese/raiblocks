@@ -9,6 +9,7 @@
 
 #include <blake2/blake2.h>
 
+// ws boost namespace extension to fit into the 256 bit structure
 namespace boost
 {
 template <>
@@ -21,12 +22,15 @@ struct hash<rai::uint256_union>
 	}
 };
 }
+
+// ws rai namespace with all the classes that can be called
 namespace rai
 {
 class block_store;
 /**
  * Determine the balance as of this block
  */
+// ws pulls current and overrides with new. 
 class balance_visitor : public rai::block_visitor
 {
 public:
